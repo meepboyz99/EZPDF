@@ -73,7 +73,9 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- SIDEBAR OVERLAY (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="App.closeSidebar()"></div>
+
   <div class="main-wrapper">
 
     <header class="tool-header" id="tool-header">
@@ -85,7 +87,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-ghost" id="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('collapsed')" title="Toggle sidebar">
+        <button class="btn btn-ghost" id="sidebar-toggle" onclick="App.toggleSidebar()" title="Toggle sidebar">
           ☰
         </button>
       </div>

@@ -23,6 +23,27 @@ const App = {
     this.toolsMap[tool.id] = tool;
   },
 
+  /* ─── Sidebar Toggle (responsive) ─── */
+  isMobile() { return window.innerWidth <= 768; },
+
+  toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebar-overlay');
+    if (this.isMobile()) {
+      const open = sb.classList.toggle('mobile-open');
+      ov.classList.toggle('show', open);
+    } else {
+      sb.classList.toggle('collapsed');
+    }
+  },
+
+  closeSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebar-overlay');
+    sb.classList.remove('mobile-open');
+    ov.classList.remove('show');
+  },
+
   /* ─── Navigation ─── */
   navigateTo(toolId) {
     const tool = this.toolsMap[toolId];
@@ -45,6 +66,9 @@ const App = {
     if (tool.mount) {
       try { tool.mount(); } catch(e) { console.error('mount error', e); }
     }
+
+    // Auto-close sidebar on mobile after selecting a tool
+    if (this.isMobile()) this.closeSidebar();
 
     window.location.hash = toolId;
   },

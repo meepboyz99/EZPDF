@@ -82,12 +82,24 @@ body {
   flex-direction: column;
   transition: width var(--transition-m), transform var(--transition-m);
   overflow: hidden;
-  z-index: 100;
+  z-index: 200;
 }
 
 .sidebar.collapsed {
   width: 0;
 }
+
+/* Sidebar overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+.sidebar-overlay.show { display: block; }
 
 /* Logo */
 .sidebar-logo {
@@ -932,10 +944,167 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16p
 .range-tag-remove { cursor: pointer; color: var(--accent); opacity: 0.7; }
 .range-tag-remove:hover { opacity: 1; }
 
-/* ── Responsive ── */
-@media (max-width: 700px) {
-  .sidebar { width: 200px; }
-  .tool-panel { padding: 16px; }
-  .welcome-tools-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-  .thumb-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Full mobile + tablet system
+   ═══════════════════════════════════════════ */
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 220px; }
+  .tool-panel { padding: 20px; }
+  .welcome-tools-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .welcome-hero-title { font-size: 22px; }
+  .dropzone { padding: 36px 24px; }
+  .options-panel { padding: 16px; }
+  .option-label { min-width: 110px; }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+
+  /* Body scroll allowed on mobile */
+  body { overflow: auto; height: auto; }
+  #app { height: 100%; min-height: 100vh; }
+
+  /* ── Sidebar: slide-in drawer ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform var(--transition-m);
+    z-index: 200;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 280px !important;
+  }
+
+  /* ── Main takes full width ── */
+  .main-wrapper {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .tool-header {
+    padding: 0 16px;
+    height: 58px;
+  }
+  .header-icon-wrap { width: 36px; height: 36px; font-size: 18px; }
+  .header-title { font-size: 15px; }
+  .header-desc { display: none; }
+  .header-actions { display: flex !important; }
+
+  /* ── Hamburger always visible on mobile ── */
+  #sidebar-toggle {
+    display: flex !important;
+    order: -1;
+    padding: 8px 10px;
+    font-size: 20px;
+  }
+
+  /* ── Tool Panel ── */
+  .tool-panel { padding: 14px; }
+  .tool-content { max-width: 100%; }
+
+  /* ── Welcome Screen ── */
+  .welcome-hero { padding: 10px 0 4px; }
+  .welcome-hero-title { font-size: 20px; }
+  .welcome-hero-sub { font-size: 12px; }
+  .welcome-stats { gap: 20px; }
+  .welcome-stat-num { font-size: 18px; }
+  .welcome-tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .welcome-tool-card { padding: 14px 10px; }
+  .welcome-tool-icon { font-size: 18px; }
+  .welcome-tool-name { font-size: 12px; }
+  .welcome-tool-desc { display: none; }
+  .welcome-grid { gap: 18px; }
+
+  /* ── Dropzone ── */
+  .dropzone { padding: 28px 16px; border-radius: var(--radius-lg); }
+  .dropzone-icon { font-size: 32px; margin-bottom: 8px; }
+  .dropzone-label { font-size: 13.5px; }
+  .dropzone.has-file { padding: 16px; }
+
+  /* ── Options panel ── */
+  .options-panel { padding: 14px; gap: 14px; }
+  .option-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .option-label { min-width: unset; font-size: 12px; }
+  .option-group { gap: 5px; }
+  .chip { padding: 6px 12px; font-size: 12px; min-height: 36px; }
+
+  /* ── Action row ── */
+  .action-row { gap: 8px; }
+  .btn-lg { padding: 12px 20px; font-size: 13.5px; width: 100%; justify-content: center; }
+  .btn-primary.btn-lg { width: 100%; }
+
+  /* ── Thumbnails ── */
+  .thumb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 7px;
+  }
+  .thumb-page-num { font-size: 9px; }
+  .thumb-footer { padding: 4px 5px; }
+
+  /* ── File list ── */
+  .file-list-item { padding: 8px 10px; gap: 8px; }
+  .file-item-icon { font-size: 16px; }
+  .file-item-name { font-size: 12px; }
+  .file-item-badge { display: none; }
+
+  /* ── Viewer controls ── */
+  .viewer-controls { gap: 6px; padding: 10px 12px; }
+  .viewer-controls .btn-sm { padding: 6px 10px; font-size: 11px; }
+  .zoom-label { min-width: 32px; font-size: 11px; }
+  .page-input { width: 42px; }
+
+  /* ── Sign canvas ── */
+  #sign-canvas { width: 100% !important; height: 160px !important; }
+  .sign-toolbar { gap: 6px; padding: 8px 10px; }
+  .color-dot { width: 24px; height: 24px; }
+
+  /* ── Inputs ── */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  select, textarea {
+    font-size: 16px; /* prevents iOS zoom */
+    padding: 10px 12px;
+  }
+  .input-sm { max-width: 100%; }
+  .range-row input[type="range"] { flex: 1; }
+
+  /* ── Output text ── */
+  .output-text { font-size: 11px; max-height: 260px; }
+
+  /* ── Info box ── */
+  .info-box { font-size: 12px; }
+
+  /* ── Progress card ── */
+  .progress-card { padding: 28px 24px; min-width: unset; width: calc(100vw - 48px); }
+
+  /* ── Toast ── */
+  .toast-container { bottom: 16px; right: 12px; left: 12px; }
+  .toast { max-width: 100%; }
+}
+
+/* ── Small mobile (≤ 420px) ── */
+@media (max-width: 420px) {
+  .welcome-tools-grid { grid-template-columns: repeat(2, 1fr); }
+  .thumb-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .tool-header { padding: 0 10px; }
+  .tool-panel { padding: 10px; }
 }
