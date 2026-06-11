@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EZPDF — Your Complete PDF Toolkit</title>
+  <meta name="description" content="Free browser-based PDF tools. Merge, split, compress, rotate, convert, watermark, encrypt, sign and more. 100% private — all processing in your browser.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- PDF-lib -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <!-- Sortable.js (drag-and-drop) -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+  <!-- JSZip (multi-file downloads) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="url(#grad)"/>
+          <path d="M8 7h8l5 5v9a1 1 0 01-1 1H8a1 1 0 01-1-1V8a1 1 0 011-1z" fill="white" fill-opacity="0.9"/>
+          <path d="M16 7l5 5h-4a1 1 0 01-1-1V7z" fill="white" fill-opacity="0.5"/>
+          <rect x="10" y="13" width="8" height="1.5" rx="0.75" fill="rgba(108,99,255,0.8)"/>
+          <rect x="10" y="16" width="6" height="1.5" rx="0.75" fill="rgba(108,99,255,0.6)"/>
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6c63ff"/>
+              <stop offset="1" stop-color="#4d45cc"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text-wrap">
+        <span class="logo-text">EZPDF</span>
+        <span class="logo-sub">PDF Toolkit</span>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="tool-search" placeholder="Search tools..." autocomplete="off">
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Rendered by app.js -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="privacy-badge">
+        <span class="privacy-icon">🔒</span>
+        <div>
+          <p class="privacy-title">100% Private</p>
+          <p class="privacy-desc">Files never leave your device</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrapper">
+
+    <header class="tool-header" id="tool-header">
+      <div class="tool-header-left">
+        <div class="header-icon-wrap" id="header-icon">⚡</div>
+        <div class="header-text">
+          <h1 class="header-title" id="header-title">EZPDF Toolkit</h1>
+          <p class="header-desc" id="header-desc">18 powerful tools — select one to get started</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" id="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('collapsed')" title="Toggle sidebar">
+          ☰
+        </button>
+      </div>
+    </header>
+
+    <main class="tool-panel" id="tool-panel">
+      <!-- Tool content rendered here -->
+    </main>
+
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATIONS -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- PROGRESS OVERLAY -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-card">
+    <div class="progress-spinner-ring"></div>
+    <p class="progress-title" id="progress-title">Processing…</p>
+    <p class="progress-sub" id="progress-sub">Please wait</p>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <span class="progress-pct" id="progress-pct">0%</span>
+  </div>
+</div>
+
+<!-- JS (order matters) -->
+<script src="js/app.js"></script>
+<script src="js/tools-view.js"></script>
+<script src="js/tools-organize.js"></script>
+<script src="js/tools-edit.js"></script>
+<script src="js/tools-convert.js"></script>
+<script src="js/tools-optimize.js"></script>
+<script src="js/tools-security.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>
