@@ -14,29 +14,37 @@ App.registerTool({
     return `
       ${App.createDropzone('rotate-dz', { label: 'Drop PDF to rotate pages' })}
       <div id="rotate-ui" style="display:none; margin-top:20px;">
-        <div class="options-panel">
+        <div class="options-panel" style="margin-bottom:16px;">
           <div class="option-row">
             <span class="option-label">Rotation</span>
             <div class="option-group">
-              <button class="chip active" id="rot-90"  onclick="RotateTool.setAngle(90)">↻ 90°</button>
+              <button class="chip active" id="rot-90"  onclick="RotateTool.setAngle(90)">↻ 90° Right</button>
               <button class="chip" id="rot-180" onclick="RotateTool.setAngle(180)">↻ 180°</button>
-              <button class="chip" id="rot-270" onclick="RotateTool.setAngle(270)">↺ 270°</button>
+              <button class="chip" id="rot-270" onclick="RotateTool.setAngle(270)">↺ 90° Left</button>
             </div>
           </div>
           <div class="option-row">
             <span class="option-label">Apply to</span>
             <div class="option-group">
-              <button class="chip active" id="rot-all-btn"  onclick="RotateTool.setScope('all')">All Pages</button>
+              <button class="chip active" id="rot-all-btn" onclick="RotateTool.setScope('all')">All Pages</button>
               <button class="chip" id="rot-pick-btn" onclick="RotateTool.setScope('pick')">Pick Pages</button>
             </div>
           </div>
         </div>
-        <div id="rotate-thumb-section" style="display:none; margin-top:16px;">
-          <p class="section-title" style="margin-bottom:10px;">Click pages to select for rotation</p>
-          <div id="rotate-thumbs" class="thumb-grid"></div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <p class="section-title" id="rotate-thumb-label">Preview — all pages will rotate</p>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary btn-sm" id="rotate-select-all" style="display:none;">Select All</button>
+            <button class="btn btn-secondary btn-sm" id="rotate-clear-sel" style="display:none;">Clear</button>
+          </div>
         </div>
+
+        <div id="rotate-thumbs" class="thumb-grid"></div>
+
         <div class="action-row" style="margin-top:16px;">
-          <button class="btn btn-primary btn-lg" id="rotate-btn">🔄 Rotate & Download</button>
+          <button class="btn btn-primary btn-lg" id="rotate-btn">🔄 Apply Rotation & Download</button>
+          <span id="rotate-sel-info" style="font-size:12px; color:var(--text-3);"></span>
         </div>
       </div>`;
   },
@@ -49,10 +57,12 @@ App.registerTool({
       if (!f) return App.showToast('Please select a PDF', 'error');
       pdfFile = f;
       try {
-        App.showProgress('Loading PDF…');
+        App.showProgress('Loading thumbnails…');
         pdfJsDoc = await App.loadPDFJS(f);
         document.getElementById('rotate-ui').style.display = 'block';
         App.showFileInfo('rotate-dz', f, pdfJsDoc.numPages);
+        await renderThumbs();
+        updateSelInfo();
         App.hideProgress();
       } catch(e) {
         App.hideProgress();
@@ -63,47 +73,121 @@ App.registerTool({
     async function renderThumbs() {
       const grid = document.getElementById('rotate-thumbs');
       grid.innerHTML = '';
+
       for (let i = 1; i <= pdfJsDoc.numPages; i++) {
         App.updateProgress((i / pdfJsDoc.numPages) * 100);
-        const canvas = await App.renderPageToCanvas(pdfJsDoc, i, 0.22);
+        const canvas = await App.renderPageToCanvas(pdfJsDoc, i, 0.25);
+
         const card = document.createElement('div');
-        card.className = 'thumb-card' + (selected.has(i) ? ' selected' : '');
+        card.className = 'thumb-card rotate-preview-card' + (scope === 'pick' && selected.has(i) ? ' selected' : '');
         card.dataset.page = i;
-        card.innerHTML = `<div class="thumb-canvas-wrap"></div>
-          <div class="thumb-footer"><span class="thumb-page-num">Page ${i}</span></div>
+
+        // Wrap canvas in a rotating container so overflow doesn't break the card
+        const rotWrap = document.createElement('div');
+        rotWrap.className = 'rotate-canvas-wrap';
+        rotWrap.dataset.page = i;
+        rotWrap.style.cssText = 'overflow:hidden; display:flex; align-items:center; justify-content:center; background:white; min-height:80px;';
+        canvas.style.transition = 'transform 0.3s cubic-bezier(.4,0,.2,1)';
+        canvas.style.transformOrigin = 'center';
+        // Show angle based on current scope
+        const previewAngle = (scope === 'all' || selected.has(i)) ? angle : 0;
+        canvas.style.transform = `rotate(${previewAngle}deg)`;
+        rotWrap.appendChild(canvas);
+
+        card.innerHTML = `
+          <div class="thumb-footer" style="flex-direction:column; align-items:center; gap:3px; padding:6px;">
+            <span class="thumb-page-num">Page ${i}</span>
+            <span class="rotate-angle-badge" id="rot-badge-${i}"></span>
+          </div>
           <span class="thumb-check">✓</span>`;
-        card.querySelector('.thumb-canvas-wrap').appendChild(canvas);
-        card.onclick = () => {
-          if (selected.has(i)) { selected.delete(i); card.classList.remove('selected'); }
-          else { selected.add(i); card.classList.add('selected'); }
-        };
+
+        card.insertBefore(rotWrap, card.firstChild);
+        updateBadge(i, previewAngle);
+
+        if (scope === 'pick') {
+          card.onclick = () => {
+            if (selected.has(i)) { selected.delete(i); card.classList.remove('selected'); }
+            else { selected.add(i); card.classList.add('selected'); }
+            updateSelInfo();
+            applyPreviewToCard(i);
+          };
+        }
+
         grid.appendChild(card);
       }
+    }
+
+    function applyPreviewToCard(pageNum) {
+      const wrap = document.querySelector(`.rotate-canvas-wrap[data-page="${pageNum}"]`);
+      if (!wrap) return;
+      const canvas = wrap.querySelector('canvas');
+      const isAffected = scope === 'all' || selected.has(pageNum);
+      if (canvas) canvas.style.transform = `rotate(${isAffected ? angle : 0}deg)`;
+      updateBadge(pageNum, isAffected ? angle : 0);
+    }
+
+    function applyPreviewAll() {
+      for (let i = 1; i <= (pdfJsDoc ? pdfJsDoc.numPages : 0); i++) applyPreviewToCard(i);
+    }
+
+    function updateBadge(pageNum, deg) {
+      const badge = document.getElementById(`rot-badge-${pageNum}`);
+      if (!badge) return;
+      if (deg === 0) {
+        badge.textContent = 'No change';
+        badge.style.cssText = 'font-size:10px; color:var(--text-3);';
+      } else {
+        badge.textContent = `+${deg}°`;
+        badge.style.cssText = 'font-size:10px; font-weight:700; color:var(--accent-l); background:var(--accent-subtle); border:1px solid var(--accent-mid); border-radius:20px; padding:1px 7px;';
+      }
+    }
+
+    function updateSelInfo() {
+      const el = document.getElementById('rotate-sel-info');
+      if (!el) return;
+      if (scope === 'pick') el.textContent = `${selected.size} page${selected.size !== 1 ? 's' : ''} selected`;
+      else el.textContent = pdfJsDoc ? `${pdfJsDoc.numPages} pages will rotate` : '';
     }
 
     window.RotateTool = {
       setAngle(a) {
         angle = a;
-        [90,180,270].forEach(v => document.getElementById(`rot-${v}`).classList.toggle('active', v === a));
+        [90, 180, 270].forEach(v =>
+          document.getElementById(`rot-${v}`).classList.toggle('active', v === a)
+        );
+        applyPreviewAll();
       },
       setScope(s) {
         scope = s;
-        ['all','pick'].forEach(v => document.getElementById(`rot-${v}-btn`).classList.toggle('active', v === s));
-        const sec = document.getElementById('rotate-thumb-section');
-        if (s === 'pick') {
-          sec.style.display = 'block';
-          if (pdfJsDoc && !document.getElementById('rotate-thumbs').children.length) {
-            App.showProgress('Loading thumbnails…');
-            renderThumbs().then(() => App.hideProgress());
-          }
-        } else {
-          sec.style.display = 'none';
+        ['all', 'pick'].forEach(v =>
+          document.getElementById(`rot-${v}-btn`).classList.toggle('active', v === s)
+        );
+        document.getElementById('rotate-select-all').style.display = s === 'pick' ? 'inline-flex' : 'none';
+        document.getElementById('rotate-clear-sel').style.display  = s === 'pick' ? 'inline-flex' : 'none';
+        document.getElementById('rotate-thumb-label').textContent  =
+          s === 'all' ? 'Live preview — all pages will rotate' : 'Click pages to select · preview updates instantly';
+
+        if (pdfJsDoc) {
+          App.showProgress('Updating preview…');
+          renderThumbs().then(() => { updateSelInfo(); App.hideProgress(); });
         }
       }
     };
 
+    document.getElementById('rotate-select-all').onclick = () => {
+      for (let i = 1; i <= pdfJsDoc.numPages; i++) selected.add(i);
+      document.querySelectorAll('.rotate-preview-card').forEach(c => c.classList.add('selected'));
+      applyPreviewAll(); updateSelInfo();
+    };
+    document.getElementById('rotate-clear-sel').onclick = () => {
+      selected.clear();
+      document.querySelectorAll('.rotate-preview-card').forEach(c => c.classList.remove('selected'));
+      applyPreviewAll(); updateSelInfo();
+    };
+
     document.getElementById('rotate-btn').onclick = async () => {
       if (!pdfFile) return;
+      if (scope === 'pick' && !selected.size) return App.showToast('Select at least one page', 'error');
       try {
         App.showProgress('Rotating pages…');
         const bytes = await App.readFile(pdfFile);
@@ -120,7 +204,8 @@ App.registerTool({
         const outBytes = await doc.save();
         App.hideProgress();
         App.downloadBytes(outBytes, `${App.stem(pdfFile.name)}-rotated.pdf`);
-        App.showToast('PDF rotated successfully!');
+        const count = scope === 'all' ? pdfJsDoc.numPages : selected.size;
+        App.showToast(`Rotated ${count} page${count !== 1 ? 's' : ''} by ${angle}°!`);
       } catch(e) {
         App.hideProgress();
         App.showToast('Rotate failed: ' + e.message, 'error');

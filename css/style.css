@@ -915,6 +915,46 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16p
 }
 .progress-pct { font-size: 11px; color: var(--text-3); margin-top: 8px; display: block; }
 
+/* ── Reorder drag handle ── */
+.reorder-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 22px;
+  background: var(--surface-4);
+  cursor: grab;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  transition: background var(--transition);
+}
+.reorder-handle:active { cursor: grabbing; }
+.reorder-handle:hover { background: var(--accent-subtle); }
+.reorder-handle-dots { font-size: 13px; color: var(--text-3); letter-spacing: 2px; }
+
+.sortable-drag { opacity: 0.9 !important; box-shadow: var(--shadow-lg) !important; }
+
+/* ── Rotate preview badge ── */
+.rotate-angle-badge {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.rotate-canvas-wrap {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  min-height: 80px;
+}
+.rotate-canvas-wrap canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+
 /* ── Divider ── */
 .divider { height: 1px; background: var(--border); margin: 4px 0; }
 
